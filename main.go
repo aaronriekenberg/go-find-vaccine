@@ -35,6 +35,7 @@ type vaccineLocationProperties struct {
 	City         string        `json:"city"`
 	Name         string        `json:"name"`
 	State        string        `json:"state"`
+	Address      string        `json:"address"`
 	PostalCode   string        `json:"postal_code"`
 	Appointments []appointment `json:"appointments"`
 }
@@ -171,13 +172,15 @@ func searchForAppointments(configuration *configuration) {
 		locationsWithAppointments = append(locationsWithAppointments, vaccineLocationFeatureAndDistance)
 	}
 
+	log.Printf("len(locationsWithAppointments) = %v", len(locationsWithAppointments))
+
 	sort.Slice(locationsWithAppointments, func(i, j int) bool {
 		return locationsWithAppointments[i].distanceMiles < locationsWithAppointments[j].distanceMiles
 	})
 
 	log.Printf("nearest %v features with appointments:", configuration.NumNearestLocationsToLog)
 
-	for i := 0; i < configuration.NumNearestLocationsToLog; i = i + 1 {
+	for i := 0; (i < configuration.NumNearestLocationsToLog) && (i < len(locationsWithAppointments)); i = i + 1 {
 		log.Printf("\nlocation:\n%# v", pretty.Formatter(locationsWithAppointments[i]))
 	}
 	log.Printf("end searchForAppointments")
