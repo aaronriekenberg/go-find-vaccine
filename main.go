@@ -14,10 +14,10 @@ import (
 )
 
 type configuration struct {
-	APIURL                   string  `json:"api_url"`
-	SearchLatitude           float64 `json:"search_latitude"`
-	SearchLongitude          float64 `json:"search_longitude"`
-	NumNearestLocationsToLog int     `json:"num_nearest_locations_to_log"`
+	APIURLs                  []string `json:"api_urls"`
+	SearchLatitude           float64  `json:"search_latitude"`
+	SearchLongitude          float64  `json:"search_longitude"`
+	NumNearestLocationsToLog int      `json:"num_nearest_locations_to_log"`
 }
 
 type geometry struct {
@@ -142,46 +142,55 @@ func searchForAppointments(configuration *configuration) {
 	}
 	log.Printf("searchLocation:\n%# v", pretty.Formatter(searchLocation))
 
-	apiResponse, err := makeAPIGETCall(configuration.APIURL)
-	if err != nil {
-		log.Fatalf("makeAPIGETCall error %v", err)
-	}
+	var apiResponses []*apiGETResponse
 
-	log.Printf("got %v features in api response", len(apiResponse.Features))
+	for _, url := range configuration.APIURLs {
+		apiResponse, err := makeAPIGETCall(url)
+		if err != nil {
+			log.Fatalf("makeAPIGETCall error %v", err)
+		}
+
+		log.Printf("got %v features in api response from %q", len(apiResponse.Features), url)
+
+		apiResponses = append(apiResponses, apiResponse)
+	}
 
 	locationsWithAppointments := make([]vaccineLocationFeatureAndDistance, 0)
 
-	for i := range apiResponse.Features {
-		currentFeature := &(apiResponse.Features[i])
+	for _, apiResponse := range apiResponses {
 
-		// log.Printf("\nprocessing feature:\n%# v", pretty.Formatter(currentFeature))
+		for i := range apiResponse.Features {
+			currentFeature := &(apiResponse.Features[i])
 
-		if len(currentFeature.Properties.Appointments) == 0 {
-			// log.Printf("feature has no appointments")
-			continue
+			// log.Printf("\nprocessing feature:\n%# v", pretty.Formatter(currentFeature))
+
+			if len(currentFeature.Properties.Appointments) == 0 {
+				// log.Printf("feature has no appointments")
+				continue
+			}
+
+			if len(currentFeature.Geometry.Coordinates) != 2 {
+				log.Printf("feature has unknown coordinates length %v", len(currentFeature.Geometry.Coordinates))
+				continue
+			}
+
+			featureLocation := haversine.Coord{
+				Lat: currentFeature.Geometry.Coordinates[1],
+				Lon: currentFeature.Geometry.Coordinates[0],
+			}
+			// log.Printf("featureLocation:\n%# v", pretty.Formatter(featureLocation))
+
+			currentFeatureDistanceMiles, _ := haversine.Distance(searchLocation, featureLocation)
+
+			// log.Printf("currentFeatureDistanceMiles = %v", currentFeatureDistanceMiles)
+
+			vaccineLocationFeatureAndDistance := vaccineLocationFeatureAndDistance{
+				vaccineLocationFeature: currentFeature,
+				distanceMiles:          currentFeatureDistanceMiles,
+			}
+
+			locationsWithAppointments = append(locationsWithAppointments, vaccineLocationFeatureAndDistance)
 		}
-
-		if len(currentFeature.Geometry.Coordinates) != 2 {
-			log.Printf("feature has unknown coordinates length %v", len(currentFeature.Geometry.Coordinates))
-			continue
-		}
-
-		featureLocation := haversine.Coord{
-			Lat: currentFeature.Geometry.Coordinates[1],
-			Lon: currentFeature.Geometry.Coordinates[0],
-		}
-		// log.Printf("featureLocation:\n%# v", pretty.Formatter(featureLocation))
-
-		currentFeatureDistanceMiles, _ := haversine.Distance(searchLocation, featureLocation)
-
-		// log.Printf("currentFeatureDistanceMiles = %v", currentFeatureDistanceMiles)
-
-		vaccineLocationFeatureAndDistance := vaccineLocationFeatureAndDistance{
-			vaccineLocationFeature: currentFeature,
-			distanceMiles:          currentFeatureDistanceMiles,
-		}
-
-		locationsWithAppointments = append(locationsWithAppointments, vaccineLocationFeatureAndDistance)
 	}
 
 	log.Printf("len(locationsWithAppointments) = %v", len(locationsWithAppointments))
