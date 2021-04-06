@@ -32,16 +32,19 @@ type appointment struct {
 }
 
 type vaccineLocationProperties struct {
-	URL                      string        `json:"url"`
-	Provider                 string        `json:"provider"`
-	City                     string        `json:"city"`
-	Name                     string        `json:"name"`
-	State                    string        `json:"state"`
-	Address                  string        `json:"address"`
-	PostalCode               string        `json:"postal_code"`
-	AppointmentsLastFetched  string        `json:"appointments_last_fetched"`
-	AppointmentsLastModified string        `json:"appointments_last_modified"`
-	Appointments             []appointment `json:"appointments"`
+	URL                              string        `json:"url"`
+	Provider                         string        `json:"provider"`
+	ProviderLocationID               string        `json:"provider_location_id"`
+	City                             string        `json:"city"`
+	Name                             string        `json:"name"`
+	State                            string        `json:"state"`
+	Address                          string        `json:"address"`
+	PostalCode                       string        `json:"postal_code"`
+	AppointmentsLastFetched          string        `json:"appointments_last_fetched"`
+	AppointmentsLastModified         string        `json:"appointments_last_modified"`
+	AppointmentsAvailableAllDoses    bool          `json:"appointments_available_all_doses"`
+	AppointmentsAvailable2ndDoseOnly bool          `json:"appointments_available_2nd_dose_only"`
+	Appointments                     []appointment `json:"appointments"`
 }
 
 type vaccineLocationFeature struct {
