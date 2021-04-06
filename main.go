@@ -42,10 +42,10 @@ type vaccineLocationProperties struct {
 	PostalCode                       string        `json:"postal_code"`
 	AppointmentsLastFetched          string        `json:"appointments_last_fetched"`
 	AppointmentsLastModified         string        `json:"appointments_last_modified"`
+	AppointmentsAvailable            bool          `json:"appointments_available"`
 	AppointmentsAvailableAllDoses    bool          `json:"appointments_available_all_doses"`
 	AppointmentsAvailable2ndDoseOnly bool          `json:"appointments_available_2nd_dose_only"`
 	Appointments                     []appointment `json:"appointments"`
-	AppointmentsAvailable            bool          `json:"appointments_available"`
 }
 
 type vaccineLocationFeature struct {
