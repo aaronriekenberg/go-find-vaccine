@@ -74,6 +74,11 @@ func makeHTTPGETCallWithResponse(url string, expectedStatusCode int) ([]byte, er
 	}
 	defer response.Body.Close()
 
+	log.Printf("response.Header last-modified = %v", response.Header.Values("last-modified"))
+	log.Printf("response.Header cf-cache-status = %v", response.Header.Values("cf-cache-status"))
+	log.Printf("response.Header cf-ray = %v", response.Header.Values("cf-ray"))
+	log.Printf("response.Header age = %v", response.Header.Values("age"))
+
 	log.Printf("response.StatusCode = %v", response.StatusCode)
 	if response.StatusCode != expectedStatusCode {
 		return nil, fmt.Errorf("got unexpected http status code %v expected %v", response.StatusCode, expectedStatusCode)
