@@ -33,6 +33,7 @@ type appointment struct {
 
 type vaccineLocationProperties struct {
 	URL          string        `json:"url"`
+	Provider     string        `json:"provider"`
 	City         string        `json:"city"`
 	Name         string        `json:"name"`
 	State        string        `json:"state"`
