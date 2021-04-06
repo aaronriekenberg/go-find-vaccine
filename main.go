@@ -151,7 +151,7 @@ func searchForAppointments(configuration *configuration) {
 
 	locationsWithAppointments := make([]vaccineLocationFeatureAndDistance, 0)
 
-	for i, _ := range apiResponse.Features {
+	for i := range apiResponse.Features {
 		currentFeature := &(apiResponse.Features[i])
 
 		// log.Printf("\nprocessing feature:\n%# v", pretty.Formatter(currentFeature))
