@@ -1,8 +1,7 @@
 {
     "api_urls": [
         "https://www.vaccinespotter.org/api/v0/states/MN.json",
-        "https://www.vaccinespotter.org/api/v0/states/WI.json",
-        "https://www.vaccinespotter.org/api/v0/states/IA.json"
+        "https://www.vaccinespotter.org/api/v0/states/WI.json"
     ],
     "search_latitude": 44.7502105,
     "search_longitude": -93.2132368,

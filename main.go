@@ -45,6 +45,7 @@ type vaccineLocationProperties struct {
 	AppointmentsAvailableAllDoses    bool          `json:"appointments_available_all_doses"`
 	AppointmentsAvailable2ndDoseOnly bool          `json:"appointments_available_2nd_dose_only"`
 	Appointments                     []appointment `json:"appointments"`
+	AppointmentsAvailable            bool          `json:"appointments_available"`
 }
 
 type vaccineLocationFeature struct {
@@ -164,7 +165,7 @@ func searchForAppointments(configuration *configuration) {
 
 			// log.Printf("\nprocessing feature:\n%# v", pretty.Formatter(currentFeature))
 
-			if len(currentFeature.Properties.Appointments) == 0 {
+			if (len(currentFeature.Properties.Appointments) == 0) && (!currentFeature.Properties.AppointmentsAvailable) {
 				// log.Printf("feature has no appointments")
 				continue
 			}
