@@ -3,7 +3,10 @@
         "https://www.vaccinespotter.org/api/v0/states/MN.json",
         "https://www.vaccinespotter.org/api/v0/states/WI.json"
     ],
+    "add_uuid_parameter": true,
     "search_latitude": 44.7502105,
     "search_longitude": -93.2132368,
-    "num_nearest_locations_to_log": 10
+    "num_nearest_locations_to_log": 10,
+    "filter_provider": "hyvee",
+    "filter_distance_miles": 120
 }

@@ -8,16 +8,21 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strings"
 
+	"github.com/google/uuid"
 	"github.com/kr/pretty"
 	"github.com/umahmood/haversine"
 )
 
 type configuration struct {
 	APIURLs                  []string `json:"api_urls"`
+	AddUUIDParameter         bool     `json:"add_uuid_parameter"`
 	SearchLatitude           float64  `json:"search_latitude"`
 	SearchLongitude          float64  `json:"search_longitude"`
 	NumNearestLocationsToLog int      `json:"num_nearest_locations_to_log"`
+	FilterProvider           string   `json:"filter_provider"`
+	FilterDistanceMiles      float64  `json:"filter_distance_miles"`
 }
 
 type geometry struct {
@@ -146,6 +151,9 @@ func searchForAppointments(configuration *configuration) {
 	var apiResponses []*apiGETResponse
 
 	for _, url := range configuration.APIURLs {
+		if configuration.AddUUIDParameter {
+			url = url + "?q=" + uuid.New().String()
+		}
 		apiResponse, err := makeAPIGETCall(url)
 		if err != nil {
 			log.Fatalf("makeAPIGETCall error %v", err)
@@ -156,7 +164,10 @@ func searchForAppointments(configuration *configuration) {
 		apiResponses = append(apiResponses, apiResponse)
 	}
 
-	locationsWithAppointments := make([]vaccineLocationFeatureAndDistance, 0)
+	filterProvider := strings.ToLower(configuration.FilterProvider)
+	log.Printf("filterProvider = %q", filterProvider)
+
+	locationsWithAppointmentsPassingFilters := make([]vaccineLocationFeatureAndDistance, 0)
 
 	for _, apiResponse := range apiResponses {
 
@@ -164,6 +175,11 @@ func searchForAppointments(configuration *configuration) {
 			currentFeature := &(apiResponse.Features[i])
 
 			// log.Printf("\nprocessing feature:\n%# v", pretty.Formatter(currentFeature))
+
+			featureProvider := strings.TrimSpace(strings.ToLower(currentFeature.Properties.Provider))
+			if (len(filterProvider) > 0) && (filterProvider != featureProvider) {
+				continue
+			}
 
 			if (len(currentFeature.Properties.Appointments) == 0) && (!currentFeature.Properties.AppointmentsAvailable) {
 				// log.Printf("feature has no appointments")
@@ -185,25 +201,29 @@ func searchForAppointments(configuration *configuration) {
 
 			// log.Printf("currentFeatureDistanceMiles = %v", currentFeatureDistanceMiles)
 
+			if (configuration.FilterDistanceMiles > 0) && (currentFeatureDistanceMiles > configuration.FilterDistanceMiles) {
+				continue
+			}
+
 			vaccineLocationFeatureAndDistance := vaccineLocationFeatureAndDistance{
 				vaccineLocationFeature: currentFeature,
 				distanceMiles:          currentFeatureDistanceMiles,
 			}
 
-			locationsWithAppointments = append(locationsWithAppointments, vaccineLocationFeatureAndDistance)
+			locationsWithAppointmentsPassingFilters = append(locationsWithAppointmentsPassingFilters, vaccineLocationFeatureAndDistance)
 		}
 	}
 
-	log.Printf("len(locationsWithAppointments) = %v", len(locationsWithAppointments))
+	log.Printf("len(locationsWithAppointmentsPassingFilters) = %v", len(locationsWithAppointmentsPassingFilters))
 
-	sort.Slice(locationsWithAppointments, func(i, j int) bool {
-		return locationsWithAppointments[i].distanceMiles < locationsWithAppointments[j].distanceMiles
+	sort.Slice(locationsWithAppointmentsPassingFilters, func(i, j int) bool {
+		return locationsWithAppointmentsPassingFilters[i].distanceMiles < locationsWithAppointmentsPassingFilters[j].distanceMiles
 	})
 
-	log.Printf("nearest %v features with appointments:", configuration.NumNearestLocationsToLog)
+	log.Printf("nearest %v features with appointments passing filters:", configuration.NumNearestLocationsToLog)
 
-	for i := 0; (i < configuration.NumNearestLocationsToLog) && (i < len(locationsWithAppointments)); i = i + 1 {
-		log.Printf("\nlocation:\n%# v", pretty.Formatter(locationsWithAppointments[i]))
+	for i := 0; (i < configuration.NumNearestLocationsToLog) && (i < len(locationsWithAppointmentsPassingFilters)); i = i + 1 {
+		log.Printf("\navailable location:\n%# v", pretty.Formatter(locationsWithAppointmentsPassingFilters[i]))
 	}
 	log.Printf("end searchForAppointments")
 }
